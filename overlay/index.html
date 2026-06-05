@@ -1,0 +1,168 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: transparent;
+        width: 280px;
+        height: 420px;
+        overflow: hidden;
+        font-family: "Malgun Gothic", sans-serif;
+        user-select: none;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: 100%;
+        padding: 8px;
+        gap: 8px;
+      }
+
+      .bubble {
+        background: rgba(15, 15, 30, 0.88);
+        border: 1px solid rgba(135, 206, 235, 0.4);
+        border-radius: 12px;
+        padding: 10px 14px;
+        width: 100%;
+      }
+
+      .bubble-name {
+        color: #87ceeb;
+        font-size: 11px;
+        font-weight: bold;
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        -webkit-app-region: drag;
+        cursor: grab;
+      }
+
+      .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #4ade80;
+      }
+
+      .bubble-text {
+        color: #e0f0ff;
+        font-size: 12px;
+        line-height: 1.6;
+        -webkit-app-region: no-drag;
+      }
+
+      .character-area {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        -webkit-app-region: drag;
+        cursor: grab;
+      }
+
+      .character-placeholder {
+        width: 160px;
+        height: 200px;
+        background: rgba(135, 206, 235, 0.08);
+        border: 1px dashed rgba(135, 206, 235, 0.3);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(135, 206, 235, 0.5);
+        font-size: 12px;
+        -webkit-app-region: drag;
+      }
+
+      .mic-bar {
+        background: rgba(15, 15, 30, 0.85);
+        border: 1px solid rgba(135, 206, 235, 0.25);
+        border-radius: 8px;
+        padding: 6px 10px;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        -webkit-app-region: no-drag;
+      }
+
+      .mic-label {
+        color: #87ceeb;
+        font-size: 10px;
+      }
+
+      .close-btn {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        width: 18px;
+        height: 18px;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        border-radius: 50%;
+        color: #aaa;
+        font-size: 11px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-app-region: no-drag;
+      }
+
+      .close-btn:hover {
+        background: rgba(255, 80, 80, 0.4);
+        color: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <button class="close-btn" onclick="window.close()">✕</button>
+
+      <div class="bubble">
+        <div class="bubble-name">
+          <div class="status-dot"></div>
+          루아
+        </div>
+        <div class="bubble-text" id="msg">
+          안녕~ 화면 봐줘 라고 말하면 분석해줄게뿡빵띠
+        </div>
+      </div>
+
+      <div class="character-area">
+        <div class="character-placeholder">Live2D 준비 중</div>
+      </div>
+
+      <div class="mic-bar">
+        <span style="font-size: 14px">🎤</span>
+        <span class="mic-label" id="status">대기 중...</span>
+      </div>
+    </div>
+
+    <script>
+      async function poll() {
+        try {
+          const res = await fetch("http://localhost:8765/latest");
+          const data = await res.json();
+          if (data.message)
+            document.getElementById("msg").innerText = data.message;
+          if (data.status)
+            document.getElementById("status").innerText = data.status;
+        } catch (e) {}
+        setTimeout(poll, 1000);
+      }
+      poll();
+    </script>
+  </body>
+</html>

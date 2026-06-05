@@ -1,0 +1,14 @@
+# Node
+overlay/node_modules/
+
+# Python
+__pycache__/
+*.pyc
+.mypy_cache/
+
+# 환경
+.env
+
+# 임시파일
+*.tmp
+*.png
