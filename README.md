@@ -24,7 +24,7 @@ vtuber-assistant/
 ├── overlay/
 │ ├── main.js # Electron 메인
 │ ├── preload.js # Electron preload
-│ ├── index.html # 오버레이 UI
+│ ├── index.html # 오버레이 UIs
 │ └── package.json
 ├── config.py # 설정값
 ├── main.py # 진입점
