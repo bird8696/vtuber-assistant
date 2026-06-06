@@ -7,7 +7,12 @@ def analyze_with_vision(image_path: str, user_text: str) -> str:
     print("🔍 Qwen 로딩 중... (10~20초 걸려)")
     with open(image_path, "rb") as f:
         img_b64 = base64.b64encode(f.read()).decode()
-    os.unlink(image_path)
+
+    # 파일 읽은 후 바로 삭제 (base64로 변환 완료된 시점)
+    try:
+        os.unlink(image_path)
+    except:
+        pass
 
     payload = {
         "model": OLLAMA_MODEL,

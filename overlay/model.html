@@ -1,0 +1,176 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: transparent;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+      }
+      #drag-handle {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 36px;
+        background: rgba(135, 206, 235, 0.15);
+        border-bottom: 1px solid rgba(135, 206, 235, 0.3);
+        border-radius: 8px 8px 0 0;
+        -webkit-app-region: drag;
+        cursor: grab;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .handle-dots {
+        display: flex;
+        gap: 4px;
+        -webkit-app-region: drag;
+      }
+      .handle-dot {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: rgba(135, 206, 235, 0.5);
+      }
+      #live2d-canvas {
+        position: fixed;
+        top: 36px;
+        left: 0;
+        width: 100%;
+        height: calc(100% - 36px);
+        -webkit-app-region: no-drag;
+        cursor: crosshair;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="drag-handle">
+      <div class="handle-dots">
+        <div class="handle-dot"></div>
+        <div class="handle-dot"></div>
+        <div class="handle-dot"></div>
+        <div class="handle-dot"></div>
+        <div class="handle-dot"></div>
+        <div class="handle-dot"></div>
+      </div>
+    </div>
+    <canvas id="live2d-canvas"></canvas>
+
+    <script src="live2dcubismcore.min.js"></script>
+    <script src="node_modules/pixi.js/dist/pixi.min.js"></script>
+    <script src="node_modules/pixi-live2d-display/dist/cubism4.min.js"></script>
+    <script>
+      const MODEL_PATH =
+        "E:/my_fun_boot/rua/运行文件（完整版）/新逐光-龙女妹妹.model3.json";
+      let model = null;
+      let lastExpression = -1;
+
+      async function initLive2D() {
+        const canvas = document.getElementById("live2d-canvas");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight - 36;
+
+        const app = new PIXI.Application({
+          view: canvas,
+          transparent: true,
+          backgroundAlpha: 0,
+          width: canvas.width,
+          height: canvas.height,
+          antialias: true,
+        });
+
+        try {
+          model = await PIXI.live2d.Live2DModel.from(MODEL_PATH);
+          app.stage.addChild(model);
+
+          model.anchor.set(0.5, 0.5);
+          model.x = canvas.width / 2;
+          model.y = canvas.height / 2;
+          model.scale.set(0.9);
+
+          let dragging = false;
+          let startX, startY, startMX, startMY;
+
+          canvas.addEventListener("mousedown", (e) => {
+            dragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            startMX = model.x;
+            startMY = model.y;
+          });
+
+          canvas.addEventListener("mousemove", (e) => {
+            if (!dragging) return;
+            model.x = startMX + (e.clientX - startX);
+            model.y = startMY + (e.clientY - startY);
+          });
+
+          canvas.addEventListener("mouseup", () => {
+            dragging = false;
+          });
+          canvas.addEventListener("mouseleave", () => {
+            dragging = false;
+          });
+
+          canvas.addEventListener(
+            "wheel",
+            (e) => {
+              e.preventDefault();
+              const delta = e.deltaY > 0 ? -0.05 : 0.05;
+              const newScale = Math.min(
+                3,
+                Math.max(0.05, model.scale.x + delta),
+              );
+              model.scale.set(newScale);
+            },
+            { passive: false },
+          );
+
+          console.log("Live2D 류아 로드 완료");
+        } catch (e) {
+          console.error("Live2D 로드 실패:", e);
+        }
+      }
+
+      async function lipSync() {
+        try {
+          const res = await fetch("http://localhost:8765/latest");
+          const data = await res.json();
+
+          if (model) {
+            // 립싱크
+            if (data.mouth !== undefined) {
+              const mouthVal = parseFloat(data.mouth);
+              model.internalModel.coreModel.setParameterValueById(
+                "ParamMouthOpenY",
+                mouthVal,
+              );
+            }
+
+            // 표정
+            const expIdx = data.expression;
+            if (expIdx !== undefined && expIdx !== lastExpression) {
+              lastExpression = expIdx;
+              if (expIdx >= 1 && expIdx <= 9) {
+                model.expression(`expression${expIdx}`);
+              }
+            }
+          }
+        } catch (e) {}
+        setTimeout(lipSync, 50);
+      }
+
+      initLive2D();
+      lipSync();
+    </script>
+  </body>
+</html>

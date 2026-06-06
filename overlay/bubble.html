@@ -1,0 +1,309 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: rgba(10, 12, 20, 0.92);
+        border: 1px solid rgba(135, 206, 235, 0.3);
+        border-radius: 10px;
+        font-family: "Consolas", "D2Coding", monospace;
+        user-select: none;
+        overflow: hidden;
+        width: 100vw;
+        height: 100vh;
+        -webkit-app-region: drag;
+      }
+      .titlebar {
+        background: rgba(135, 206, 235, 0.1);
+        border-bottom: 1px solid rgba(135, 206, 235, 0.2);
+        padding: 6px 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        -webkit-app-region: drag;
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+      .dot-red {
+        background: #ff5f57;
+      }
+      .dot-yellow {
+        background: #ffbd2e;
+      }
+      .dot-green {
+        background: #28c840;
+      }
+      .title {
+        color: rgba(135, 206, 235, 0.7);
+        font-size: 10px;
+        margin-left: 4px;
+      }
+      .close-btn {
+        margin-left: auto;
+        background: none;
+        border: none;
+        color: #aaa;
+        font-size: 11px;
+        cursor: pointer;
+        -webkit-app-region: no-drag;
+      }
+      .chat-area {
+        height: calc(100% - 72px);
+        overflow-y: auto;
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        -webkit-app-region: no-drag;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(135, 206, 235, 0.2) transparent;
+      }
+      .chat-area::-webkit-scrollbar {
+        width: 4px;
+      }
+      .chat-area::-webkit-scrollbar-thumb {
+        background: rgba(135, 206, 235, 0.2);
+        border-radius: 2px;
+      }
+      .msg {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        animation: fadeIn 0.2s ease;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(4px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      .msg-header {
+        font-size: 9px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .prefix-rua {
+        color: #87ceeb;
+      }
+      .prefix-user {
+        color: #a8e6a3;
+      }
+      .msg-time {
+        color: rgba(255, 255, 255, 0.25);
+      }
+      .msg-body {
+        font-size: 11px;
+        line-height: 1.6;
+        border-left: 2px solid;
+        padding-left: 8px;
+      }
+      .msg-body.rua {
+        color: #d0eeff;
+        border-color: rgba(135, 206, 235, 0.4);
+      }
+      .msg-body.user {
+        color: #c8f0c4;
+        border-color: rgba(168, 230, 163, 0.4);
+      }
+      .input-area {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 40px;
+        background: rgba(135, 206, 235, 0.05);
+        border-top: 1px solid rgba(135, 206, 235, 0.2);
+        display: flex;
+        align-items: center;
+        padding: 0 8px;
+        gap: 6px;
+        -webkit-app-region: no-drag;
+      }
+      .input-prefix {
+        color: #87ceeb;
+        font-size: 11px;
+        opacity: 0.7;
+      }
+      .input-box {
+        flex: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: #e0f0ff;
+        font-size: 11px;
+        font-family: "Consolas", "D2Coding", monospace;
+        caret-color: #87ceeb;
+      }
+      .input-box::placeholder {
+        color: rgba(135, 206, 235, 0.3);
+      }
+      .mic-btn {
+        background: rgba(135, 206, 235, 0.15);
+        border: 1px solid rgba(135, 206, 235, 0.3);
+        border-radius: 4px;
+        color: #87ceeb;
+        font-size: 13px;
+        padding: 3px 7px;
+        cursor: pointer;
+      }
+      .mic-btn.active {
+        background: rgba(255, 100, 100, 0.3);
+        border-color: rgba(255, 100, 100, 0.5);
+        animation: pulse 0.8s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+      .send-btn {
+        background: rgba(135, 206, 235, 0.15);
+        border: 1px solid rgba(135, 206, 235, 0.3);
+        border-radius: 4px;
+        color: #87ceeb;
+        font-size: 10px;
+        padding: 3px 8px;
+        cursor: pointer;
+      }
+      .send-btn:hover {
+        background: rgba(135, 206, 235, 0.25);
+      }
+      .cursor {
+        display: inline-block;
+        width: 6px;
+        height: 11px;
+        background: #87ceeb;
+        animation: blink 1s infinite;
+        vertical-align: middle;
+        margin-left: 2px;
+      }
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="titlebar">
+      <div class="dot dot-red"></div>
+      <div class="dot dot-yellow"></div>
+      <div class="dot dot-green"></div>
+      <span class="title">류아 terminal v1.0</span>
+      <button class="close-btn" onclick="window.close()">✕</button>
+    </div>
+    <div class="chat-area" id="chat"></div>
+    <div class="input-area">
+      <span class="input-prefix">$</span>
+      <input
+        class="input-box"
+        id="input"
+        type="text"
+        placeholder="류아에게 말걸기..."
+      />
+      <button class="mic-btn" id="mic-btn" onclick="triggerVoice()">🎤</button>
+      <button class="send-btn" onclick="sendText()">전송</button>
+    </div>
+
+    <script>
+      let lastCount = 0;
+
+      function getTime() {
+        const now = new Date();
+        return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
+      }
+
+      function addMessage(role, content) {
+        const chat = document.getElementById("chat");
+        const isRua = role === "assistant";
+        const div = document.createElement("div");
+        div.className = "msg";
+        div.innerHTML = `
+    <div class="msg-header">
+      <span class="${isRua ? "prefix-rua" : "prefix-user"}">${isRua ? "> 류아" : "$ 유저"}</span>
+      <span class="msg-time">[${getTime()}]</span>
+    </div>
+    <div class="msg-body ${isRua ? "rua" : "user"}">${content}</div>
+  `;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+      }
+
+      async function sendText() {
+        const input = document.getElementById("input");
+        const text = input.value.trim();
+        if (!text) return;
+        input.value = "";
+        try {
+          await fetch("http://localhost:8765/text_input", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text }),
+          });
+        } catch (e) {
+          console.error("전송 실패:", e);
+        }
+      }
+
+      async function triggerVoice() {
+        const btn = document.getElementById("mic-btn");
+        btn.classList.add("active");
+        try {
+          await fetch("http://localhost:8765/trigger_voice", {
+            method: "POST",
+          });
+        } catch (e) {
+          console.error("음성 트리거 실패:", e);
+        }
+        setTimeout(() => btn.classList.remove("active"), 6000);
+      }
+
+      document.getElementById("input").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") sendText();
+      });
+
+      addMessage(
+        "assistant",
+        '안녕~ 텍스트로 말걸거나 🎤 버튼 눌러서 음성으로 대화해줘 😊<span class="cursor"></span>',
+      );
+
+      async function poll() {
+        try {
+          const res = await fetch("http://localhost:8765/latest");
+          const data = await res.json();
+          const msgs = data.messages || [];
+          if (msgs.length > lastCount) {
+            for (let i = lastCount; i < msgs.length; i++) {
+              addMessage(msgs[i].role, msgs[i].content);
+            }
+            lastCount = msgs.length;
+          }
+        } catch (e) {}
+        setTimeout(poll, 500);
+      }
+      poll();
+    </script>
+  </body>
+</html>
