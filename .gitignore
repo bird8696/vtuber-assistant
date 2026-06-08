@@ -15,5 +15,3 @@ __pycache__/
 # Live2D 큐비즘 코어 (용량 큼)
 overlay/live2dcubismcore.min.js
 
-# 캡처 이미지
-*.png

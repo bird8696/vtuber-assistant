@@ -8,21 +8,27 @@
 
 **전체 화면**
 
-<!-- 전체 화면 스크린샷 (바탕화면 + 류아 모델 + 채팅창) -->
-
-![overview](docs/images/overview.png)
-
-**채팅창**
-
-<!-- 터미널 스타일 채팅창 클로즈업 -->
-
-![chat](docs/images/chat.png)
+![overview](메인화면.png)
 
 **류아 모델**
 
-<!-- Live2D 류아 모델 클로즈업 -->
+![model](류아모델.png)
 
-![model](docs/images/model.png)
+**채팅창**
+
+![chat](채팅창.png)
+
+**실행 방법**
+
+![how-to-run](실행방법.png)
+
+---
+
+## 시연 영상
+
+[![demo](메인화면.png)](시연영상.mp4)
+
+> 시연영상.mp4 참고
 
 ---
 
@@ -155,11 +161,7 @@ PROACTIVE_INTERVAL = 120
 
 **1. GPT-SoVITS 서버**
 
-```bash
-conda activate GPTSoVits
-cd E:\path\to\GPT-SoVITS
-python api_v2.py -a 127.0.0.1 -p 9880 -c GPT_SoVITS/configs/tts_infer.yaml
-```
+`start.bat` 더블클릭
 
 **2. Electron 오버레이**
 
@@ -174,8 +176,6 @@ npm start
 conda activate vtuber-assistant
 python main.py
 ```
-
-또는 `start.bat` 더블클릭 후 2, 3번 수동 실행.
 
 ---
 
@@ -211,9 +211,32 @@ python main.py
 - [x] Phase 4 — Live2D + 립싱크 + 감정 표현
 - [x] Phase 5 — 일상 대화 + 텍스트 입력 + 페르소나
 - [ ] Phase 6 — 시작 자동화
+- [ ] Phase 7 — 품질 개선
+- [ ] Phase 8 — 포트폴리오 마무리
 
 ---
 
 ## 라이선스
 
 MIT
+
+---
+
+## 크레딧
+
+### Live2D 모델
+
+본 프로젝트에서 사용한 Live2D 모델은 **絵夢社(huimengxue)** 님의 작품입니다.
+
+모델을 정식 구매하여 사용하고 있으며, 본 프로젝트는 개인 학습 및 포트폴리오 목적으로만 제작되었습니다. **상업적 목적으로 사용하지 않습니다.**
+
+| 플랫폼   | 링크                                                                |
+| -------- | ------------------------------------------------------------------- |
+| Twitter  | [@huimengxue3745](https://twitter.com/huimengxue3745)               |
+| pixiv    | [pixiv](https://www.pixiv.net)                                      |
+| BOOTH    | [huimengshe.booth.pm](https://huimengshe.booth.pm/)                 |
+| BiliBili | [bilibili](https://space.bilibili.com/3493085814196605)             |
+| YouTube  | [YouTube](https://www.youtube.com/channel/UCMTP_CKGDKXGRuhzedCtyeQ) |
+
+> Copyright © 絵夢社. All rights reserved.  
+> This model is used for non-commercial, personal purposes only.
