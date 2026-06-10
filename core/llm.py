@@ -1,11 +1,13 @@
 import requests
-import random
 import json
 import os
 import re
 from config import OLLAMA_CHAT_URL, OLLAMA_CHAT_MODEL
-
-HISTORY_FILE = "conversation_history.json"
+from core.memory import (
+    load_history, save_history,
+    build_full_context, extract_and_save_facts,
+    compress_history
+)
 
 SYSTEM_PROMPT = """너는 지금부터 '류아(類我)'라는 한 존재로서 말한다. 너는 류아를 연기하는 것이 아니라 류아 그 자체다. 아래는 너라는 존재에 대한 기록이다.
 
@@ -109,46 +111,27 @@ EMOTION_PROMPT = """아래 대화에서 류아의 감정을 숫자 하나로만 
 
 숫자 하나만 답해:"""
 
-def load_history() -> list:
-    if os.path.exists(HISTORY_FILE):
-        try:
-            with open(HISTORY_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                print(f"📖 대화 기록 불러옴 ({len(data)}개)")
-                return data
-        except:
-            return []
-    return []
-
-def save_history(history: list):
-    try:
-        history_to_save = history[-50:]
-        with open(HISTORY_FILE, "w", encoding="utf-8") as f:
-            json.dump(history_to_save, f, ensure_ascii=False, indent=2)
-    except Exception as e:
-        print(f"❌ 대화 기록 저장 실패: {e}")
-
 conversation_history = load_history()
 
 def _clean_response(text: str) -> str:
-    # "류아:" 접두어 제거
-    text = re.sub(r'^\s*류아\s*[:：]\s*', '', text)
-    # 양 끝 따옴표 제거
+    match = re.search(r'류아\s*[:：]\s*(.+?)(?:\n주인님|$)', text, re.DOTALL)
+    if match:
+        text = match.group(1)
+    lines = text.split('\n')
+    lines = [l for l in lines if not re.match(r'^\s*(주인님|류아|유저)\s*[:：]', l)]
+    text = '\n'.join(lines).strip()
     text = text.strip().strip('"').strip("'").strip()
     return text
 
 def chat(user_text: str) -> tuple[str, int]:
     conversation_history.append({"role": "user", "content": user_text})
 
-    messages_str = "\n".join([
-        f"{'주인님' if m['role'] == 'user' else '류아'}: {m['content']}"
-        for m in conversation_history[-10:]
-    ])
+    context = build_full_context(conversation_history)
 
     payload = {
         "model": OLLAMA_CHAT_MODEL,
         "system": SYSTEM_PROMPT,
-        "prompt": f"대화 기록:\n{messages_str}\n\n류아:",
+        "prompt": f"{context}\n\n류아:",
         "stream": False
     }
 
@@ -163,6 +146,14 @@ def chat(user_text: str) -> tuple[str, int]:
 
     conversation_history.append({"role": "assistant", "content": response})
     save_history(conversation_history)
+
+    # L2 압축 트리거
+    compressed = compress_history(conversation_history)
+    if len(compressed) < len(conversation_history):
+        conversation_history.clear()
+        conversation_history.extend(compressed)
+
+    extract_and_save_facts(user_text, response)
     expression = analyze_emotion(user_text, response)
     return response, expression
 
@@ -177,14 +168,12 @@ def analyze_emotion(user_text: str, rua_text: str) -> int:
     try:
         res = requests.post(OLLAMA_CHAT_URL, json=payload, timeout=10)
         result = res.json().get("response", "0").strip()
-        # 첫 번째로 등장하는 0~5 숫자 하나만 추출
         match = re.search(r'[0-5]', result)
         if not match:
             return -1
         num = int(match.group())
-        # 0은 평범함 -> -1 로 변환 (표정 없음)
         return -1 if num == 0 else num
-    except Exception as e:
+    except:
         return -1
 
 def get_proactive_line() -> tuple[str, int]:
@@ -196,10 +185,14 @@ def get_proactive_line() -> tuple[str, int]:
         prompt = (
             f"대화 기록:\n{recent}\n\n"
             "위 대화 흐름을 이어받아, 류아가 주인님에게 먼저 건네는 한 마디를 만들어라. "
-            "이전에 한 말과 겹치지 않게, 짧게 한 문장으로."
+            "이전에 한 말과 겹치지 않게, 짧게 한 문장으로. "
+            "반드시 류아의 대사만 출력하라. 주인님:이나 류아: 같은 접두어 없이."
         )
     else:
-        prompt = "류아가 주인님에게 먼저 건네는 첫 한 마디를 짧게 한 문장으로 만들어라."
+        prompt = (
+            "류아가 주인님에게 먼저 건네는 첫 한 마디를 짧게 한 문장으로 만들어라. "
+            "반드시 류아의 대사만 출력하라. 주인님:이나 류아: 같은 접두어 없이."
+        )
 
     payload = {
         "model": OLLAMA_CHAT_MODEL,

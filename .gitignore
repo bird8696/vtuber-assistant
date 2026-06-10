@@ -20,3 +20,9 @@ vts_token.txt
 
 # 이전 대화 내용 저장
 conversation_history.json
+
+# 요약 정보 저장
+summary.json
+
+# 사실 정보 저장
+facts.json
