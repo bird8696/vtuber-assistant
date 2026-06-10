@@ -1,22 +1,12 @@
 import asyncio
 import websockets
 import json
-import time
 
 async def main():
     async with websockets.connect("ws://localhost:8001") as ws:
-        # 토큰 요청
-        await ws.send(json.dumps({
-            "apiName": "VTubeStudioPublicAPI",
-            "apiVersion": "1.0",
-            "requestID": "req1",
-            "messageType": "AuthenticationTokenRequest",
-            "data": {"pluginName": "vtuber-assistant", "pluginDeveloper": "bird8696"}
-        }))
-        res = json.loads(await ws.recv())
-        token = res["data"]["authenticationToken"]
+        with open("vts_token.txt") as f:
+            token = f.read().strip()
 
-        # 인증
         await ws.send(json.dumps({
             "apiName": "VTubeStudioPublicAPI",
             "apiVersion": "1.0",
@@ -27,15 +17,22 @@ async def main():
         await ws.recv()
         print("인증 완료")
 
-        # expression2 (화남) 적용
-        await ws.send(json.dumps({
-            "apiName": "VTubeStudioPublicAPI",
-            "apiVersion": "1.0",
-            "requestID": "req3",
-            "messageType": "ExpressionActivationRequest",
-            "data": {"expressionFile": "expression2.exp3.json", "active": True}
-        }))
-        res = json.loads(await ws.recv())
-        print(f"표정 적용 결과: {res}")
+        # 입 벌리기 테스트
+        import time
+        for i in range(20):
+            val = 0.8 if i % 2 == 0 else 0.0
+            await ws.send(json.dumps({
+                "apiName": "VTubeStudioPublicAPI",
+                "apiVersion": "1.0",
+                "requestID": "req3",
+                "messageType": "InjectParameterDataRequest",
+                "data": {
+                    "faceFound": False,
+                    "mode": "set",
+                    "parameterValues": [{"id": "MouthOpen", "value": val}]
+                }
+            }))
+            await ws.recv()
+            time.sleep(0.3)
 
 asyncio.run(main())

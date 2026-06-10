@@ -169,4 +169,4 @@ def vts_set_expression(index: int):
         _reset_timer.start()
 
 def vts_set_mouth(value: float):
-    vts_client.set_parameter("ParamMouthOpenY", value)
+    vts_client.set_parameter("MouthOpen", value)
