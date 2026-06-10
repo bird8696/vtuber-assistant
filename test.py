@@ -1,27 +1,41 @@
-순서대로 정리해줄게라구요~
+import asyncio
+import websockets
+import json
+import time
 
----
+async def main():
+    async with websockets.connect("ws://localhost:8001") as ws:
+        # 토큰 요청
+        await ws.send(json.dumps({
+            "apiName": "VTubeStudioPublicAPI",
+            "apiVersion": "1.0",
+            "requestID": "req1",
+            "messageType": "AuthenticationTokenRequest",
+            "data": {"pluginName": "vtuber-assistant", "pluginDeveloper": "bird8696"}
+        }))
+        res = json.loads(await ws.recv())
+        token = res["data"]["authenticationToken"]
 
-**1. GPT-SoVITS 서버**s
-`start.bat` 더블클릭
+        # 인증
+        await ws.send(json.dumps({
+            "apiName": "VTubeStudioPublicAPI",
+            "apiVersion": "1.0",
+            "requestID": "req2",
+            "messageType": "AuthenticationRequest",
+            "data": {"pluginName": "vtuber-assistant", "pluginDeveloper": "bird8696", "authenticationToken": token}
+        }))
+        await ws.recv()
+        print("인증 완료")
 
----
+        # expression2 (화남) 적용
+        await ws.send(json.dumps({
+            "apiName": "VTubeStudioPublicAPI",
+            "apiVersion": "1.0",
+            "requestID": "req3",
+            "messageType": "ExpressionActivationRequest",
+            "data": {"expressionFile": "expression2.exp3.json", "active": True}
+        }))
+        res = json.loads(await ws.recv())
+        print(f"표정 적용 결과: {res}")
 
-**2. Electron 오버레이** (PowerShell)
-```powershell
-cd E:\mycoding_test\vtuber-assistant\overlay
-npm start
-```
-
----
-
-**3. 파이프라인** (Anaconda Prompt)
-```bash
-conda activate vtuber-assistant
-cd E:\mycoding_test\vtuber-assistant
-python main.py
-```
-
----
-
-이 순서 지켜야 해라구요~ GPT-SoVITS 서버 먼저 안 켜면 TTS가 400 에러 나거든뿡빵띠
+asyncio.run(main())

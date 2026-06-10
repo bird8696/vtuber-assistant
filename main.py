@@ -7,6 +7,7 @@ from core.capture import capture_screen
 from core.vision import analyze_with_vision
 from core.tts import speak
 from core.llm import chat, get_proactive_line
+from core.vts import vts_connect, vts_set_expression
 from config import TRIGGER_KEYWORDS, PROACTIVE_INTERVAL
 from bridge.server import app
 
@@ -22,6 +23,7 @@ def update_overlay(role: str, content: str):
 def send_expression(index: int):
     try:
         req.post(f"{BRIDGE_URL}/expression", json={"index": index}, timeout=2)
+        vts_set_expression(index)
     except:
         pass
 
@@ -88,6 +90,9 @@ def voice_loop():
 
 def main():
     print("\n✅ 파이프라인 시작. 말해봐뿡빵띠\n")
+
+    print("🔌 VTube Studio 연결 중...")
+    vts_connect()
 
     threading.Thread(target=proactive_loop, daemon=True).start()
     threading.Thread(target=text_input_loop, daemon=True).start()

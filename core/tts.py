@@ -1,20 +1,33 @@
 import tempfile
 import os
+import re
 import requests
 import sounddevice as sd
 import soundfile as sf
 import numpy as np
 from config import GPTSOVITS_URL, GPTSOVITS_REF_AUDIO, GPTSOVITS_REF_TEXT, GPTSOVITS_REF_LANG
+from core.vts import vts_set_mouth
 
 BRIDGE_URL = "http://localhost:8765"
+
+def clean_text(text: str) -> str:
+    text = re.sub(r'\(.*?\)', '', text)
+    text = re.sub(r'\[.*?\]', '', text)
+    text = re.sub(r'\*.*?\*', '', text)
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text
 
 def send_mouth(value: float):
     try:
         requests.post(f"{BRIDGE_URL}/mouth", json={"value": value}, timeout=0.5)
+        vts_set_mouth(value)
     except:
         pass
 
 def speak(text: str):
+    text = clean_text(text)
+    if not text:
+        return
     print("🔊 TTS 생성 중...")
     payload = {
         "text": text,
@@ -42,11 +55,9 @@ def speak(text: str):
                 chunk = data[pos:pos + chunk_size]
                 if len(chunk) == 0:
                     break
-
                 vol = float(np.abs(chunk).mean())
                 vol = min(1.0, vol * 8)
                 send_mouth(vol)
-
                 stream.write(chunk.reshape(-1, 1) if data.ndim == 1 else chunk)
                 pos += chunk_size
 

@@ -212,7 +212,12 @@
       <div class="dot dot-yellow"></div>
       <div class="dot dot-green"></div>
       <span class="title">류아 terminal v1.0</span>
-      <button class="close-btn" onclick="window.close()">✕</button>
+      <button
+        class="close-btn"
+        onclick="fetch('http://localhost:8766/hide', { method: 'POST' })"
+      >
+        ✕
+      </button>
     </div>
     <div class="chat-area" id="chat"></div>
     <div class="input-area">

@@ -15,3 +15,8 @@ __pycache__/
 # Live2D 큐비즘 코어 (용량 큼)
 overlay/live2dcubismcore.min.js
 
+# vts_token.txt (개인 토큰 정보)
+vts_token.txt
+
+# 이전 대화 내용 저장
+conversation_history.json
